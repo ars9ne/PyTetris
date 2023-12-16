@@ -108,19 +108,27 @@ shapes = [
     ]
 ]
 
+def on_key_press(event):
+    if event.name is "a":
+        Figure1.move("left")
+    elif event.name is "d":
+        Figure1.move("right")
+    elif event.name is "s":
+        Figure1.move("down")
+    os.system('cls||clear')
+    print_field()
+
+keyboard.on_press(on_key_press)
+
 Figure1 = Figure(shapes[3])
 #print((Figure1.get_shape()))
 Figure1.spawn()
 print_field()
 Figure1.move("down")
 print_field()
+os.system('cls||clear')
 while True:
     print_field()
-    time.sleep(0.5)
     Figure1.move("down")
-    if keyboard.is_pressed("a"):
-        Figure1.move("left")
-    elif keyboard.is_pressed("d"):
-        Figure1.move("right")
-    time.sleep(0.5)
+    time.sleep(2)
     os.system('cls||clear')
