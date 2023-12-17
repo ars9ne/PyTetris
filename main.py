@@ -79,7 +79,8 @@ class Figure(object):
         # Вставка фигуры на игровое поле
         for j in range(self.position[0], len(self.shape) + self.position[0]):
             for k in range(len(self.shape[0])):
-                playing_field[j][k + self.position[1]] = 1
+                if self.shape[j - self.position[0]][k] != 0:
+                    playing_field[j][k + self.position[1]] = 1
 
     def move(self, direction):
         if direction == "down":
