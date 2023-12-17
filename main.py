@@ -35,6 +35,14 @@ class Figure(object):
     def get_shape(self):
         return self.shape
 
+    def set_static(self):
+        # Превращение активной фигуры в статичную
+        for ki in range(len(playing_field)):
+            for kj in range(len(playing_field[0])):
+                if playing_field[ki][kj] == 1:
+                    playing_field[ki][kj] = 2
+        self.is_active = False
+
     def get_position(self):
         return self.position
 
@@ -51,25 +59,16 @@ class Figure(object):
             for i in range(len(self.shape[0])):
                 #(playing_field[self.position[0]][len(self.shape) + 1] == 2) or
                 if self.position[0] + len(self.shape) >= 20: #проверяем не достигла ли фигура последней линии
-
-                    # Превращение активной фигуры в статичную
-                    for ki in range(len(playing_field)):
-                        for kj in range(len(playing_field[0])):
-                            if playing_field[ki][kj] == 1:
-                                playing_field[ki][kj] = 2
-                    self.is_active = False
+                    self.set_static()
                     return False
                 else:
                     # проверка на коллизию со статичными блоками:
                     for ti in range(len(self.shape[0])):
-                        if playing_field[self.position[0] + len(self.shape)][self.position[1] + ti] == 2: # and self.shape[self.position[i]][self.position[1] + ti - 1] != 0
-                                # Превращение активной фигуры в статичную
-                                for ki in range(len(playing_field)):
-                                    for kj in range(len(playing_field[0])):
-                                        if playing_field[ki][kj] == 1:
-                                            playing_field[ki][kj] = 2
-                                self.is_active = False
+                        for tj in range(len(self.shape)):
+                            if (playing_field[self.position[0] + tj + 1][self.position[1] + ti] == 2 and self.shape[tj][ti] != 0): # or (playing_field[self.position[0] + len(self.shape)][self.position[1] + ti] == 2 and self.shape[tj][ti] != 0)
+                                self.set_static()
                                 return False
+
 
 
             if (playing_field[self.position[0]][len(self.shape) + 1] != 2) or (len(self.shape) + 1 < 20):
