@@ -7,7 +7,7 @@ import keyboard
 
 h = 20
 w = 10
-
+score = 0
 playing_field = [[0 for col in range(w)] for row in range(h)]
 
 
@@ -15,7 +15,7 @@ def print_field():
     for i in range(0, len(playing_field)):
         #print(str(playing_field[i]) + str(i))
         print(str(playing_field[i]).replace('0', ' ').replace(',', ' '))
-    print('\n')
+    print(f"\n YOUR SCORE: {score}")
     # print(str(playing_field[i]).replace('0', ' ').replace(',', ' '))
 
 
@@ -76,8 +76,7 @@ class Figure(object):
             for i in range(len(self.shape)):
                 for j in range(len(self.shape[i])):
                     if self.shape[i][j] != 0:
-                        if self.position[1] + j - 1 < 0 or playing_field[self.position[0] + i][
-                            self.position[1] + j - 1] == 2:
+                        if self.position[1] + j - 1 < 0 or playing_field[self.position[0] + i][self.position[1] + j - 1] == 2:
                             return False
             return True
 
@@ -87,8 +86,7 @@ class Figure(object):
             for i in range(len(self.shape)):
                 for j in range(len(self.shape[i])):
                     if self.shape[i][j] != 0:
-                        if self.position[1] + j + 1 >= w or playing_field[self.position[0] + i][
-                            self.position[1] + j + 1] == 2:
+                        if self.position[1] + j + 1 >= w or playing_field[self.position[0] + i][self.position[1] + j + 1] == 2:
                             return False
             return True
 
@@ -174,6 +172,19 @@ def on_key_press(event):
         print_field()
 
 
+def check_full_lines():
+    global score
+    global playing_field
+    for i in range(len(playing_field)):
+        if all(cell == 2 for cell in playing_field[i]):
+            for j in range(len(playing_field[i])):
+                playing_field[i][j] = 0
+            for k in range(i, 0, -1):
+                playing_field[k] = playing_field[k - 1]
+            playing_field[0] = [0 for _ in range(w)]
+            score += 50
+
+
 keyboard.on_press(on_key_press)
 
 Figure1 = Figure(shapes[3])
@@ -193,4 +204,5 @@ while True:
         Figure1.is_active = True
         Figure1.spawn()
     time.sleep(2)
+    check_full_lines()
     os.system('cls||clear')
