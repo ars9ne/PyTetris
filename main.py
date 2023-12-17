@@ -26,7 +26,7 @@ class Figure(object):
     def __init__(self, shape, is_active=False):
         self.shape = shape
         self.is_active = is_active
-        self.position = [0, 4]
+        self.position = [0, 4] #позиция верхнего левого кубика фигуры
 
     def get_shape(self):
         return self.shape
@@ -43,34 +43,65 @@ class Figure(object):
                         playing_field[j][k + self.position[1]] = 1
 
 
+    def check_boundary(self,direction):
+        if direction == "down":
+            for i in range(len(self.shape[0])):
+                if (playing_field[self.position[0]][len(self.shape) + 1] == 2) or (self.position[0] + len(self.shape) >= 20):
+                    #Превращение активной фигуры в статичную
+                    for ki in range(len(playing_field)):
+                        for kj in range(len(playing_field[0])):
+                            if playing_field[ki][kj] == 1:
+                                playing_field[ki][kj] = 2
+                    return False
+            if (playing_field[self.position[0]][len(self.shape) + 1] != 2) or (len(self.shape) + 1 < 20):
+                return True
+
+
+
+        elif direction == "left":
+            if 0 > self.position[1] - len(self.shape):
+                return False
+            else:
+                self.position[1] -= 1
+                return True
+        elif direction == "right":
+            if w <= self.position[1] + len(self.shape):
+                return False
+            else:
+                self.position[1] += 1
+                return True
+
     def move(self, direction):
         if direction == "down":
-            clear_ones()
-            self.position[0] = self.position[0] + 1
-            for i in range(len(playing_field)):
-                if i == self.position[0]:
-                    # Вставка фигуры на игровое поле
-                    for j in range(self.position[0],len(self.shape)+self.position[0]):
-                        for k in range(len(self.shape[0])):
-                            playing_field[j][k + self.position[1]] = 1
+            if self.check_boundary(direction):
+                clear_ones()
+                self.position[0] = self.position[0] + 1
+                for i in range(len(playing_field)):
+                    if i == self.position[0]:
+                        # Вставка фигуры на игровое поле
+                        for j in range(self.position[0],len(self.shape)+self.position[0]):
+                            for k in range(len(self.shape[0])):
+                                playing_field[j][k + self.position[1]] = 1
         elif direction == "left":
-            clear_ones()
-            self.position[1] = self.position[1] - 1
-            for i in range(len(playing_field)):
-                if i == self.position[0]:
-                    # Вставка фигуры на игровое поле
-                    for j in range(self.position[0], len(self.shape) + self.position[0]):
-                        for k in range(len(self.shape[0])):
-                            playing_field[j][k + self.position[1]] = 1
+            if self.check_boundary(direction):
+                clear_ones()
+                self.position[1] = self.position[1] - 1
+                for i in range(len(playing_field)):
+                    if i == self.position[0]:
+                        # Вставка фигуры на игровое поле
+                        for j in range(self.position[0], len(self.shape) + self.position[0]):
+                            for k in range(len(self.shape[0])):
+                                playing_field[j][k + self.position[1]] = 1
         elif direction == "right":
-            clear_ones()
-            self.position[1] = self.position[1] + 1
-            for i in range(len(playing_field)):
-                if i == self.position[0]:
-                    # Вставка фигуры на игровое поле
-                    for j in range(self.position[0], len(self.shape) + self.position[0]):
-                        for k in range(len(self.shape[0])):
-                            playing_field[j][k + self.position[1]] = 1
+            if self.check_boundary(direction):
+                clear_ones()
+                self.position[1] = self.position[1] + 1
+                for i in range(len(playing_field)):
+                    if i == self.position[0]:
+                        # Вставка фигуры на игровое поле
+                        for j in range(self.position[0], len(self.shape) + self.position[0]):
+                            for k in range(len(self.shape[0])):
+                                playing_field[j][k + self.position[1]] = 1
 
 
 shapes = [
@@ -109,11 +140,11 @@ shapes = [
 ]
 
 def on_key_press(event):
-    if event.name is "a":
+    if event.name == "a":
         Figure1.move("left")
-    elif event.name is "d":
+    elif event.name == "d":
         Figure1.move("right")
-    elif event.name is "s":
+    elif event.name == "s":
         Figure1.move("down")
     os.system('cls||clear')
     print_field()
@@ -121,7 +152,7 @@ def on_key_press(event):
 keyboard.on_press(on_key_press)
 
 Figure1 = Figure(shapes[3])
-#print((Figure1.get_shape()))
+# print(len(Figure1.get_shape()))
 Figure1.spawn()
 print_field()
 Figure1.move("down")
