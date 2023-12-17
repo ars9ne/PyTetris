@@ -47,9 +47,16 @@ class Figure(object):
         return self.position
 
     def spawn(self):
+        for i in range(len(self.shape)):
+            for j in range(len(self.shape[i])):
+                if self.shape[i][j] != 0 and playing_field[i][self.position[1] + j] == 2:
+                    print("GAME OVER")
+                    print(f"FINAL SCORE: {score}")
+                    time.sleep(10)
+                    sys.exit()
+
         for i in range(len(playing_field)):
             if i == self.position[0]:
-                # Вставка фигуры на игровое поле
                 for j in range(len(self.shape)):
                     for k in range(len(self.shape[0])):
                         playing_field[j][k + self.position[1]] = 1
