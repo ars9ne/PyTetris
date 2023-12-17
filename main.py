@@ -13,8 +13,8 @@ playing_field = [[0 for col in range(w)] for row in range(h)]
 
 def print_field():
     for i in range(0, len(playing_field)):
-        print(str(playing_field[i]) + str(i))
-        #print(str(playing_field[i]).replace('0', ' ').replace(',', ' '))
+        #print(str(playing_field[i]) + str(i))
+        print(str(playing_field[i]).replace('0', ' ').replace(',', ' '))
     print('\n')
     # print(str(playing_field[i]).replace('0', ' ').replace(',', ' '))
 
@@ -68,26 +68,29 @@ class Figure(object):
                             if (playing_field[self.position[0] + tj + 1][self.position[1] + ti] == 2 and self.shape[tj][ti] != 0): # or (playing_field[self.position[0] + len(self.shape)][self.position[1] + ti] == 2 and self.shape[tj][ti] != 0)
                                 self.set_static()
                                 return False
-
-
-
             if (playing_field[self.position[0]][len(self.shape) + 1] != 2) or (len(self.shape) + 1 < 20):
                 return True
-
-
-
         elif direction == "left":
-            if 0 >= self.position[1]:
+            if self.position[1] <= 0:
                 return False
-            else:
-                self.position[1] -= 1
-                return True
+            for i in range(len(self.shape)):
+                for j in range(len(self.shape[i])):
+                    if self.shape[i][j] != 0:
+                        if self.position[1] + j - 1 < 0 or playing_field[self.position[0] + i][
+                            self.position[1] + j - 1] == 2:
+                            return False
+            return True
+
         elif direction == "right":
-            if w <= self.position[1] + len(self.shape[0]):
+            if self.position[1] + len(self.shape[0]) >= w:
                 return False
-            else:
-                self.position[1] += 1
-                return True
+            for i in range(len(self.shape)):
+                for j in range(len(self.shape[i])):
+                    if self.shape[i][j] != 0:
+                        if self.position[1] + j + 1 >= w or playing_field[self.position[0] + i][
+                            self.position[1] + j + 1] == 2:
+                            return False
+            return True
 
     def insert_figure(self):
         # Вставка фигуры на игровое поле
@@ -108,19 +111,17 @@ class Figure(object):
         elif direction == "left":
             if self.check_boundary(direction):
                 clear_ones()
-                self.position[1] = self.position[1]
-                for i in range(len(playing_field)):
-                    if i == self.position[0]:
-                        # Вставка фигуры на игровое поле
-                        self.insert_figure()
+                self.position[1] = self.position[1] - 1
+                self.insert_figure()
         elif direction == "right":
             if self.check_boundary(direction):
                 clear_ones()
-                self.position[1] = self.position[1]
-                for i in range(len(playing_field)):
-                    if i == self.position[0]:
-                        # Вставка фигуры на игровое поле
-                        self.insert_figure()
+                self.position[1] = self.position[1] + 1
+                self.insert_figure()
+        elif direction == "rotate":
+            self.shape = list(zip(*self.shape))[::-1]
+            clear_ones()
+            self.insert_figure()
 
 
 shapes = [
@@ -167,6 +168,8 @@ def on_key_press(event):
             Figure1.move("right")
         elif event.name == "s":
             Figure1.move("down")
+        elif event.name == "r":
+            Figure1.move("rotate")
         os.system('cls||clear')
         print_field()
 
