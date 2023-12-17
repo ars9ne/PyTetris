@@ -63,13 +63,13 @@ class Figure(object):
 
 
         elif direction == "left":
-            if 0 > self.position[1] - len(self.shape):
+            if 0 >= self.position[1]:
                 return False
             else:
                 self.position[1] -= 1
                 return True
         elif direction == "right":
-            if w <= self.position[1] + len(self.shape):
+            if w <= self.position[1] + len(self.shape[0]):
                 return False
             else:
                 self.position[1] += 1
@@ -93,7 +93,7 @@ class Figure(object):
         elif direction == "left":
             if self.check_boundary(direction):
                 clear_ones()
-                self.position[1] = self.position[1] - 1
+                self.position[1] = self.position[1]
                 for i in range(len(playing_field)):
                     if i == self.position[0]:
                         # Вставка фигуры на игровое поле
@@ -101,7 +101,7 @@ class Figure(object):
         elif direction == "right":
             if self.check_boundary(direction):
                 clear_ones()
-                self.position[1] = self.position[1] + 1
+                self.position[1] = self.position[1]
                 for i in range(len(playing_field)):
                     if i == self.position[0]:
                         # Вставка фигуры на игровое поле
