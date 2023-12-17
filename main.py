@@ -14,6 +14,7 @@ playing_field = [[0 for col in range(w)] for row in range(h)]
 def print_field():
     for i in range(0, len(playing_field)):
         print(str(playing_field[i]) + str(i))
+        #print(str(playing_field[i]).replace('0', ' ').replace(',', ' '))
     print('\n')
     # print(str(playing_field[i]).replace('0', ' ').replace(',', ' '))
 
@@ -48,8 +49,9 @@ class Figure(object):
     def check_boundary(self, direction):
         if direction == "down":
             for i in range(len(self.shape[0])):
-                if (playing_field[self.position[0]][len(self.shape) + 1] == 2) or (
-                        self.position[0] + len(self.shape) >= 20):
+                #(playing_field[self.position[0]][len(self.shape) + 1] == 2) or
+                if self.position[0] + len(self.shape) >= 20: #проверяем не достигла ли фигура последней линии
+
                     # Превращение активной фигуры в статичную
                     for ki in range(len(playing_field)):
                         for kj in range(len(playing_field[0])):
@@ -57,6 +59,19 @@ class Figure(object):
                                 playing_field[ki][kj] = 2
                     self.is_active = False
                     return False
+                else:
+                    # проверка на коллизию со статичными блоками:
+                    for ti in range(len(self.shape[0])):
+                        if playing_field[self.position[0] + len(self.shape)][self.position[1] + ti] == 2: # and self.shape[self.position[i]][self.position[1] + ti - 1] != 0
+                                # Превращение активной фигуры в статичную
+                                for ki in range(len(playing_field)):
+                                    for kj in range(len(playing_field[0])):
+                                        if playing_field[ki][kj] == 1:
+                                            playing_field[ki][kj] = 2
+                                self.is_active = False
+                                return False
+
+
             if (playing_field[self.position[0]][len(self.shape) + 1] != 2) or (len(self.shape) + 1 < 20):
                 return True
 
