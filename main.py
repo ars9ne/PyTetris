@@ -134,10 +134,12 @@ class Figure(object):
                 self.position[1] = self.position[1] + 1
                 self.insert_figure()
         elif direction == "rotate":
+            self.futher_shape = list(zip(*self.shape))[::-1]
+            if len(self.futher_shape[0]) + self.position[1] < w + 1:
+                self.shape = list(zip(*self.shape))[::-1]
+                clear_ones()
+                self.insert_figure()
 
-            self.shape = list(zip(*self.shape))[::-1]
-            clear_ones()
-            self.insert_figure()
 
 
 shapes = [
