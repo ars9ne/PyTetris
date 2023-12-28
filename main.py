@@ -107,6 +107,17 @@ class Figure(object):
                             return False
             return True
 
+        elif direction == "rotate":
+            new_shape = list(zip(*self.shape[::-1]))
+            for i in range(len(new_shape)):
+                for j in range(len(new_shape[i])):
+                    if new_shape[i][j] != 0:
+                        new_x = self.position[0] + i
+                        new_y = self.position[1] + j
+                        if new_y < 0 or new_y >= w or new_x < 0 or new_x >= h or playing_field[new_x][new_y] == 2:
+                            return False
+            return True
+
     def insert_figure(self):
         # Вставка фигуры на игровое поле
         for j in range(self.position[0], len(self.shape) + self.position[0]):
@@ -134,12 +145,10 @@ class Figure(object):
                 self.position[1] = self.position[1] + 1
                 self.insert_figure()
         elif direction == "rotate":
-            self.futher_shape = list(zip(*self.shape))[::-1]
-            if len(self.futher_shape[0]) + self.position[1] < w + 1:
-                self.shape = list(zip(*self.shape))[::-1]
+            if self.check_boundary(direction):
                 clear_ones()
+                self.shape = list(zip(*self.shape[::-1]))
                 self.insert_figure()
-
 
 
 shapes = [
