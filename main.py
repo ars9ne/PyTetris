@@ -5,6 +5,8 @@ import os
 # Размеры поля
 import keyboard
 
+pause_state = False
+
 h = 20
 w = 10
 score = 0
@@ -12,10 +14,15 @@ playing_field = [[0 for col in range(w)] for row in range(h)]
 
 
 def print_field():
+    state_info = pause_state
+    if state_info is True:
+        state_info = "PAUSE"
+    else:
+        state_info = ""
     for i in range(0, len(playing_field)):
-        #print(str(playing_field[i]) + str(i))
+        # print(str(playing_field[i]) + str(i))
         print(str(playing_field[i]).replace('0', ' ').replace(',', ' '))
-    print(f"\n YOUR SCORE: {score}")
+    print(f"\n YOUR SCORE: {score} {state_info}")
     # print(str(playing_field[i]).replace('0', ' ').replace(',', ' '))
 
 
@@ -64,15 +71,16 @@ class Figure(object):
     def check_boundary(self, direction):
         if direction == "down":
             for i in range(len(self.shape[0])):
-                #(playing_field[self.position[0]][len(self.shape) + 1] == 2) or
-                if self.position[0] + len(self.shape) >= 20: #проверяем не достигла ли фигура последней линии
+                # (playing_field[self.position[0]][len(self.shape) + 1] == 2) or
+                if self.position[0] + len(self.shape) >= 20:  # проверяем не достигла ли фигура последней линии
                     self.set_static()
                     return False
                 else:
                     # проверка на коллизию со статичными блоками:
                     for ti in range(len(self.shape[0])):
                         for tj in range(len(self.shape)):
-                            if (playing_field[self.position[0] + tj + 1][self.position[1] + ti] == 2 and self.shape[tj][ti] != 0): # or (playing_field[self.position[0] + len(self.shape)][self.position[1] + ti] == 2 and self.shape[tj][ti] != 0)
+                            if (playing_field[self.position[0] + tj + 1][self.position[1] + ti] == 2 and self.shape[tj][
+                                ti] != 0):  # or (playing_field[self.position[0] + len(self.shape)][self.position[1] + ti] == 2 and self.shape[tj][ti] != 0)
                                 self.set_static()
                                 return False
             if (playing_field[self.position[0]][len(self.shape) + 1] != 2) or (len(self.shape) + 1 < 20):
@@ -83,7 +91,8 @@ class Figure(object):
             for i in range(len(self.shape)):
                 for j in range(len(self.shape[i])):
                     if self.shape[i][j] != 0:
-                        if self.position[1] + j - 1 < 0 or playing_field[self.position[0] + i][self.position[1] + j - 1] == 2:
+                        if self.position[1] + j - 1 < 0 or playing_field[self.position[0] + i][
+                            self.position[1] + j - 1] == 2:
                             return False
             return True
 
@@ -93,7 +102,8 @@ class Figure(object):
             for i in range(len(self.shape)):
                 for j in range(len(self.shape[i])):
                     if self.shape[i][j] != 0:
-                        if self.position[1] + j + 1 >= w or playing_field[self.position[0] + i][self.position[1] + j + 1] == 2:
+                        if self.position[1] + j + 1 >= w or playing_field[self.position[0] + i][
+                            self.position[1] + j + 1] == 2:
                             return False
             return True
 
@@ -124,6 +134,7 @@ class Figure(object):
                 self.position[1] = self.position[1] + 1
                 self.insert_figure()
         elif direction == "rotate":
+
             self.shape = list(zip(*self.shape))[::-1]
             clear_ones()
             self.insert_figure()
@@ -166,7 +177,11 @@ shapes = [
 
 
 def on_key_press(event):
-    if Figure1.is_active:
+    global pause_state
+    if pause_state:
+        if event.name == "p":
+            pause_state = False
+    elif Figure1.is_active and not pause_state:
         if event.name == "a":
             Figure1.move("left")
         elif event.name == "d":
@@ -177,6 +192,8 @@ def on_key_press(event):
             Figure1.move("rotate")
         os.system('cls||clear')
         print_field()
+        if event.name == "p":
+            pause_state = True
 
 
 def check_full_lines():
@@ -203,13 +220,14 @@ print_field()
 os.system('cls||clear')
 while True:
     print_field()
-    if Figure1.is_active:
-        Figure1.move("down")
-    else:
-        Figure1 = Figure(shapes[random.randint(0, 6)])
-        Figure1.position = [0, 4]
-        Figure1.is_active = True
-        Figure1.spawn()
+    if not pause_state:
+        if Figure1.is_active:
+            Figure1.move("down")
+        else:
+            Figure1 = Figure(shapes[random.randint(0, 6)])
+            Figure1.position = [0, 4]
+            Figure1.is_active = True
+            Figure1.spawn()
     time.sleep(2)
     check_full_lines()
     os.system('cls||clear')
