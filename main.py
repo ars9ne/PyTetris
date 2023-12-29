@@ -20,9 +20,9 @@ elif choice == 2:
     choice = int(input())
     if choice == 1:
         server_state = True
-        print("Введите ваш ip адрес: ")  # 192.168.1.209
+        print("Введите ваш ip адрес: ")
         ip = input()
-        print("Введите порт: ")  # 25797
+        print("Введите порт: ")
         port = int(input())
         # Создаем сокет
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -38,7 +38,7 @@ elif choice == 2:
         server_state = True
         print("Введите ip сервера: ")  #
         ip = input()
-        print("Введите порт: ")  # 25797
+        print("Введите порт: ")
         port = int(input())
         # Создаем сокет
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -50,8 +50,12 @@ pause_state = False
 h = 20
 w = 10
 score = 0
+opponent_score = 0
 playing_field = [[0 for col in range(w)] for row in range(h)]
 
+def set_opponent_score(op_score):
+    global opponent_score
+    opponent_score = op_score
 
 def print_field(response=None):
     if not online_game:
@@ -86,7 +90,7 @@ def print_field(response=None):
             else:
                 print(playing_field_str)
 
-        print(f"\n YOUR SCORE: {score} {state_info}")
+        print(f"\n YOUR SCORE: {score} {state_info}                  OPPONENT SCORE: {opponent_score}")
 
 
 def clear_ones():  # очищает все активные блоки (для перемещения)
@@ -122,12 +126,11 @@ class Figure(object):
                 if self.shape[i][j] != 0 and playing_field[i][self.position[1] + j] == 2:
                     print("GAME OVER")
                     print(f"FINAL SCORE: {score}")
-
+                    time.sleep(10)
                     if online_game:
                         # Закрываем соединение
                         client_socket.close()
                         server_socket.close()
-                    time.sleep(10)
                     sys.exit()
 
         for i in range(len(playing_field)):
@@ -305,7 +308,10 @@ keyboard.on_press(on_key_press)
 
 def send_data():
     if server_state:
-        data_to_send = playing_field
+        data_to_send = {
+            "field": playing_field,
+            "score": score
+        }
         # Кодируем данные для отправки
         encoded_data = pickle.dumps(data_to_send)
         # Отправляем данные
@@ -333,7 +339,6 @@ if online_game:
 def start_game():
     global Figure1
     while True:
-        print("1")
         if not pause_state:
             if Figure1.is_active:
                 Figure1.move("down")
@@ -342,17 +347,17 @@ def start_game():
                 Figure1.position = [0, 4]
                 Figure1.is_active = True
                 Figure1.spawn()
-        print("2")
         # online
         if not server_state and online_game:
             received_data = client_socket.recv(2048)
             # Декодирование данных
             response = pickle.loads(received_data)
-            print_field(response)
-        print("3")
+            pl1 = response['field']
+            o_score = response['score']
+            set_opponent_score(o_score)
+            print_field(pl1)
         if not online_game:
             print_field()
-        print("4")
         if online_game and server_state:
             send_data()
         check_full_lines()
@@ -362,19 +367,17 @@ def start_game():
             serialized_data = pickle.dumps(user_data)
             # Отправка данных серверу
             client_socket.sendall(serialized_data)
-        print("5")
         if online_game:
             time.sleep(0.1)
             received_data = client_socket.recv(2048)
-            # Декодирование данных, если сервер отправляет ответ в сериализованном виде
             response = pickle.loads(received_data)
-            set_r1(response)
-        print("6")
+            pl1 = response['field']
+            o_score = response['score']
+            set_opponent_score(o_score)
+            set_r1(pl1)
         os.system('cls||clear')
         print_field(r1)
-        print("7")
         time.sleep(sleep_interval)
-        print("8")
 
 
 if __name__ == "__main__":
