@@ -4,6 +4,46 @@ import time
 import os
 # Размеры поля
 import keyboard
+import socket
+import pickle
+
+sleep_interval = 2
+online_game = False
+server_state = False
+print("Добро пожаловать в игру Тетрис, выберите режим игры:\n1) Одиночная игра\n2) Сетевая игра")
+choice = int(input())
+if choice == 1:
+    pass
+elif choice == 2:
+    online_game = True
+    print("1) Создать сервер\n2) Подключиться к игроку")
+    choice = int(input())
+    if choice == 1:
+        server_state = True
+        print("Введите ваш ip адрес: ")  # 192.168.1.209
+        ip = input()
+        print("Введите порт: ")  # 25797
+        port = int(input())
+        # Создаем сокет
+        server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        # Привязываем сокет к адресу и порту
+        server_socket.bind((ip, port))
+        # Переводим сокет в режим прослушивания
+        server_socket.listen()
+        print("Ожидание подключения клиента...")
+        # Принимаем подключение
+        client_socket, addr = server_socket.accept()
+        print(f"Подключился клиент с адреса: {addr}")
+    elif choice == 2:
+        server_state = True
+        print("Введите ip сервера: ")  #
+        ip = input()
+        print("Введите порт: ")  # 25797
+        port = int(input())
+        # Создаем сокет
+        client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        # Подключаемся к серверу
+        client_socket.connect((ip, port))
 
 pause_state = False
 
@@ -13,17 +53,40 @@ score = 0
 playing_field = [[0 for col in range(w)] for row in range(h)]
 
 
-def print_field():
-    state_info = pause_state
-    if state_info is True:
-        state_info = "PAUSE"
-    else:
-        state_info = ""
-    for i in range(0, len(playing_field)):
-        # print(str(playing_field[i]) + str(i))
-        print(str(playing_field[i]).replace('0', ' ').replace(',', ' '))
-    print(f"\n YOUR SCORE: {score} {state_info}")
-    # print(str(playing_field[i]).replace('0', ' ').replace(',', ' '))
+def print_field(response=None):
+    if not online_game:
+        state_info = pause_state
+        if state_info is True:
+            state_info = "PAUSE"
+        else:
+            state_info = ""
+        for i in range(0, len(playing_field)):
+            # print(str(playing_field[i]) + str(i))
+            print(str(playing_field[i]).replace('0', ' ').replace(',', ' '))
+        print(f"\n YOUR SCORE: {score} {state_info}")
+        # print(str(playing_field[i]).replace('0', ' ').replace(',', ' '))
+    elif online_game:
+        state_info = pause_state
+        if state_info is True:
+            state_info = "PAUSE"
+        else:
+            state_info = ""
+
+        # Определяем максимальную длину строк для правильного форматирования
+        max_len = max(len(str(playing_field[i])) for i in range(len(playing_field)))
+
+        for i in range(len(playing_field)):
+            # Форматируем строку из основного поля
+            playing_field_str = str(playing_field[i]).replace('0', ' ').replace(',', ' ')
+
+            # Если response предоставлен, добавляем его в вывод
+            if response and i < len(response):
+                response_str = str(response[i]).replace('0', ' ').replace(',', ' ')
+                print(f"{playing_field_str:<{max_len}}    {response_str}")
+            else:
+                print(playing_field_str)
+
+        print(f"\n YOUR SCORE: {score} {state_info}")
 
 
 def clear_ones():  # очищает все активные блоки (для перемещения)
@@ -59,6 +122,11 @@ class Figure(object):
                 if self.shape[i][j] != 0 and playing_field[i][self.position[1] + j] == 2:
                     print("GAME OVER")
                     print(f"FINAL SCORE: {score}")
+
+                    if online_game:
+                        # Закрываем соединение
+                        client_socket.close()
+                        server_socket.close()
                     time.sleep(10)
                     sys.exit()
 
@@ -187,6 +255,13 @@ shapes = [
 ]
 
 
+r1 = None
+def set_r1(response):
+    global r1
+    r1 = response
+    pass
+
+
 def on_key_press(event):
     global pause_state
     if pause_state:
@@ -202,8 +277,13 @@ def on_key_press(event):
         elif event.name == "r":
             Figure1.move("rotate")
         os.system('cls||clear')
-        print_field()
-        if event.name == "p":
+        if not online_game:
+            print_field()
+        elif online_game:
+            os.system('cls||clear')
+            print_field(r1)
+
+        if event.name == "p" and not online_game:
             pause_state = True
 
 
@@ -222,6 +302,23 @@ def check_full_lines():
 
 keyboard.on_press(on_key_press)
 
+
+def send_data():
+    if server_state:
+        data_to_send = playing_field
+        # Кодируем данные для отправки
+        encoded_data = pickle.dumps(data_to_send)
+        # Отправляем данные
+        client_socket.send(encoded_data)
+        #time.sleep(0.1)
+    else:
+        pass
+    pass
+
+
+
+
+
 Figure1 = Figure(shapes[3])
 # print(len(Figure1.get_shape()))
 Figure1.spawn()
@@ -229,16 +326,56 @@ print_field()
 Figure1.move("down")
 print_field()
 os.system('cls||clear')
-while True:
-    print_field()
-    if not pause_state:
-        if Figure1.is_active:
-            Figure1.move("down")
-        else:
-            Figure1 = Figure(shapes[random.randint(0, 6)])
-            Figure1.position = [0, 4]
-            Figure1.is_active = True
-            Figure1.spawn()
-    time.sleep(2)
-    check_full_lines()
-    os.system('cls||clear')
+if online_game:
+    sleep_interval = sleep_interval / 2
+
+
+def start_game():
+    global Figure1
+    while True:
+        print("1")
+        if not pause_state:
+            if Figure1.is_active:
+                Figure1.move("down")
+            else:
+                Figure1 = Figure(shapes[random.randint(0, 6)])
+                Figure1.position = [0, 4]
+                Figure1.is_active = True
+                Figure1.spawn()
+        print("2")
+        # online
+        if not server_state and online_game:
+            received_data = client_socket.recv(2048)
+            # Декодирование данных
+            response = pickle.loads(received_data)
+            print_field(response)
+        print("3")
+        if not online_game:
+            print_field()
+        print("4")
+        if online_game and server_state:
+            send_data()
+        check_full_lines()
+        if not server_state and online_game:
+            user_data = playing_field
+            # Сериализация данных клиента
+            serialized_data = pickle.dumps(user_data)
+            # Отправка данных серверу
+            client_socket.sendall(serialized_data)
+        print("5")
+        if online_game:
+            time.sleep(0.1)
+            received_data = client_socket.recv(2048)
+            # Декодирование данных, если сервер отправляет ответ в сериализованном виде
+            response = pickle.loads(received_data)
+            set_r1(response)
+        print("6")
+        os.system('cls||clear')
+        print_field(r1)
+        print("7")
+        time.sleep(sleep_interval)
+        print("8")
+
+
+if __name__ == "__main__":
+    start_game()
