@@ -10,6 +10,9 @@ import pickle
 sleep_interval = 2
 online_game = False
 server_state = False
+game_state = True
+opponent_game_state = True
+
 print("Добро пожаловать в игру Тетрис, выберите режим игры:\n1) Одиночная игра\n2) Сетевая игра")
 choice = int(input())
 if choice == 1:
@@ -121,16 +124,42 @@ class Figure(object):
         return self.position
 
     def spawn(self):
+        global game_state
         for i in range(len(self.shape)):
             for j in range(len(self.shape[i])):
                 if self.shape[i][j] != 0 and playing_field[i][self.position[1] + j] == 2:
                     print("GAME OVER")
                     print(f"FINAL SCORE: {score}")
-                    time.sleep(10)
                     if online_game:
+                        game_state = False
+                        send_data()
+                    if online_game:
+                        while check_opponent_game_state():
+                            user_data = playing_field
+                            if not server_state:
+                                # Сериализация данных клиента
+                                serialized_data = pickle.dumps(user_data)
+                                # Отправка данных серверу
+                                client_socket.sendall(serialized_data)
+                            received_data = client_socket.recv(2048)
+                            # Декодирование данных
+                            response = pickle.loads(received_data)
+                            pl1 = response['field']
+                            o_score = response['score']
+                            game_s = response['game_state']
+                            if not game_s:
+                                set_opponent_game_state(game_s)
+                            set_opponent_score(o_score)
+                            os.system('cls||clear')
+                            print_field(pl1)
+                            time.sleep(0.1)
+
+                        check_game_state()
+                        time.sleep(10)
                         # Закрываем соединение
                         client_socket.close()
                         server_socket.close()
+                    time.sleep(10)
                     sys.exit()
 
         for i in range(len(playing_field)):
@@ -264,13 +293,37 @@ def set_r1(response):
     r1 = response
     pass
 
+def set_game_state(state):
+    global game_state
+    game_state = state
+
+def set_opponent_game_state(state):
+    global opponent_game_state
+    opponent_game_state = state
+
+
+def check_game_state():
+    global game_state
+    if not game_state and not opponent_game_state:
+        os.system('cls||clear')
+        print(f"              GAME OVER!\n\nYOUR SCORE: {score}              OPPONENT SCORE:{opponent_score}")
+        time.sleep(20)
+        sys.exit()
+    return True
+
+def check_opponent_game_state():
+    if opponent_game_state:
+        return True
+    else:
+        return False
 
 def on_key_press(event):
     global pause_state
+    global game_state
     if pause_state:
         if event.name == "p":
             pause_state = False
-    elif Figure1.is_active and not pause_state:
+    elif Figure1.is_active and not pause_state and game_state:
         if event.name == "a":
             Figure1.move("left")
         elif event.name == "d":
@@ -310,7 +363,8 @@ def send_data():
     if server_state:
         data_to_send = {
             "field": playing_field,
-            "score": score
+            "score": score,
+            "game_state": game_state
         }
         # Кодируем данные для отправки
         encoded_data = pickle.dumps(data_to_send)
@@ -354,6 +408,9 @@ def start_game():
             response = pickle.loads(received_data)
             pl1 = response['field']
             o_score = response['score']
+            game_s = response['game_state']
+            if not game_s:
+                set_opponent_game_state(game_s)
             set_opponent_score(o_score)
             print_field(pl1)
         if not online_game:
@@ -367,18 +424,20 @@ def start_game():
             serialized_data = pickle.dumps(user_data)
             # Отправка данных серверу
             client_socket.sendall(serialized_data)
-        if online_game:
-            time.sleep(0.1)
+        if online_game and opponent_game_state:
+            time.sleep(0.05)
             received_data = client_socket.recv(2048)
             response = pickle.loads(received_data)
             pl1 = response['field']
             o_score = response['score']
+            game_s = response['game_state']
+            if not game_s:
+                set_opponent_game_state(game_s)
             set_opponent_score(o_score)
             set_r1(pl1)
         os.system('cls||clear')
         print_field(r1)
         time.sleep(sleep_interval)
-
 
 if __name__ == "__main__":
     start_game()
